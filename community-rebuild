@@ -1,0 +1,23 @@
+#!/bin/bash
+
+cd /tmp
+for pkg in "${$@}"; do
+  [ "${pkg}" = "${1}" ] && continue
+
+  communityco ${pkg}
+  pushd ${pkg}/trunk
+    . PKGBUILD
+    # get rid of decimal
+    pkgver=$(echo ${pkgver} | cut -d. -f1)
+    sed -i "s pkgver=.* pkgver=$(( pkgver + 1 ))" PKGBUILD
+
+    # only need to rebuild once for arch=any
+    if [ ! ${arch} = 'any' ]; then
+      extra-i686-build
+    fi
+    extra-x86_64-build
+
+    communitypkg "${1}"
+  popd
+  rm -rf ${pkg}
+done
